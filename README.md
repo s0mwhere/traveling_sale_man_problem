@@ -46,5 +46,3 @@ This project solves the TSP using a **multi-stage hybrid algorithm** that combin
 - Reduce total travel cost and improve solution quality
 
 this readme.md is brought to you by chatgpt(the poor version)
-
-## 🔁 Algorithm Pipeline
