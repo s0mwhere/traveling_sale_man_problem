@@ -23,7 +23,7 @@ TSP is an **NP-hard** problem and is commonly used to evaluate heuristic and app
 
 ## 🧠 Solution Approach
 
-This project solves the TSP using a **multi-stage hybrid algorithm** that combines shortest-path search, approximation, and local optimization.
+This project solves the TSP using a **multi-stage hybrid algorithm** that combines shortest-path search, approximation, and local optimization(optional).
 
 ### 1. Initial Graph Construction
 - Construct a weighted graph with numbered nodes
@@ -40,9 +40,18 @@ This project solves the TSP using a **multi-stage hybrid algorithm** that combin
 - Produce a near-optimal Hamiltonian cycle
 - Guarantees a solution within **1.5× optimal** for metric TSP
 
-### 4. Local Optimization (3-Opt)
+### 4. Local Optimization (3-Opt) (optional)
 - Apply the **3-opt heuristic** to improve the tour
 - Iteratively remove and reconnect edges
 - Reduce total travel cost and improve solution quality
+
+### 5. Very cool GUI
+- plot out node point on a 2D map
+- choice connections between node
+- choice node that need visiting (highlight the node)
+- A "find path button" that show the same map but with the shorted path highlight
+- A randomize button for quick map build
+
+***limitation: all node need a viable path to each other
 
 this readme.md is brought to you by chatgpt(the poor version)
