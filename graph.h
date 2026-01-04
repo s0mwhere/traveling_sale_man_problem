@@ -19,5 +19,6 @@ AdjList* create_graph(int n);
 void add_position(AdjList* G, int u, int x, int y);
 void add_edge(AdjList* G, int u, int v);
 void ShowEdges(AdjList* G, int u);
+void ShowNode(AdjList* G, int u);
 
 #endif
