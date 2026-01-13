@@ -6,12 +6,12 @@
 #include "christofiles_algorithm.h"
 
 /*
-*   Input: Pointer of a "tree" structure, an array contains must travel to points.
+*   Input: Pointer of a "tree" structure, an array contains must travel to points, a array contains all must visit points and its length.
 * 
 *   Output: A perfect_graph contains only odd-degree verticies
 *
 *   Description: This function works by counting all vertices have exists in every connection.
-*   If the counting is odd then it is a odd-degree vertices and add infomation related to it to a new "perf_graph" structure.
+*   If the counting is odd, it is a odd-degree vertices and then add infomation related to it to a new "perf_graph" structure.
 */
 
 perf_graph_ptr isolation (perf_graph_ptr graph ,mst_ptr tree, int required[], int num) {
@@ -62,7 +62,18 @@ perf_graph_ptr isolation (perf_graph_ptr graph ,mst_ptr tree, int required[], in
     return odd_degree_vertices;
 }
 
+/*
+*   Input: Pointer of a "perf_graph" structure contains only odd-degree vertices, Pointer of a "mst" structure;
+* 
+*   Output: None
+*
+*   Description: This function aims to find minimum weight matching.
+*   A matching means edge connect two odd-vertices, convert it into even-degree vertices
+*  
+*/
+
 void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
+    //An array contains all unique vertices from a graph.
     int required[graph->num_vertices];
 
     for (int i = 0; i < graph->num_vertices; i++) {
@@ -74,7 +85,7 @@ void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
         int u = graph->connection[i].point1;
         int v = graph->connection[i].point2;
 
-    // check if u is already in the array
+    // Check if a vertex is already in the array. If true then skip, If false, said vertex will be added.
         int found = 0;
         for (int j = 0; j < count; j++) {
             if (required[j] == u) {
@@ -86,7 +97,7 @@ void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
             required[count++] = u;
         }
 
-    // check if v is already in the array
+    // Check if a vertex is already in the array. If true then skip, If false, said vertex will be added.
         found = 0;
         for (int j = 0; j < count; j++) {
             if (required[j] == v) {
@@ -98,7 +109,7 @@ void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
             required[count++] = v;
         }
     }
-    
+    //Create a adjacent matrix
     int m[graph->num_vertices][graph->num_vertices];
 
     for (int i = 0; i < graph->num_vertices; i++) {
@@ -106,6 +117,7 @@ void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
             m[i][j] = 0;
         }
     }
+    //Fill the matrix with edge's weight, the two indices are two vertices of said edge.
     for (int i = 0; i < graph->num_vertices;i++) {
         int u = graph->connection[i].point1;
         int v = graph->connection[i].point2;
@@ -117,21 +129,29 @@ void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
         m[u][v] = graph->connection[i].weight;
         m[v][u] = graph->connection[i].weight;
     }
+    
 
-    int size = 1 << graph->num_vertices;  
+    int size = 1 << graph->num_vertices;                //  The maximum combination of matching is 2^(number of vertices)
+    /*  
+    *   An array contains all the possible matching 
+    *   Each vertices and matching will be hot-one binary encoded, 
+    *   for example, 
+    *   first vertex in a total of 4 vertices is encoded as 0001(base 2) = 1 (base 10)
+    *   Matching the first two vertices will be encoded as 0011 = (base 2) = 3(base 10)
+    */
     int dp[size];
-    int prev_choice[size];
-    int pair[size][2];
+    int prev_choice[size];                              //An array contains which maching has been selected
+    int pair[size][2];                                  //An 2D array to contains the two points that has been selected
     for (int mask = 0; mask < size; mask++) {
-        dp[mask] = INT_MAX;
+        dp[mask] = INT_MAX;                             //Since we find minimum matching weight, The default value wil be infinity(INT_MAX)
         prev_choice[mask] = -1;
         pair[mask][0] = -1;
         pair[mask][1] = -1;
     }
-    dp[0] = 0;
+    dp[0] = 0; //mask = 0 means no matching has been selected, and therefore no weight will be added
 
     for (int mask = 1; mask < size; mask++) {
-        //Count the number of 1 in mask, even number of mask -> continue
+        //Count the number of 1 in masks, only even numbers of 1 in masks will be selected
         int count = 0;
         for (int k = 0; k < graph->num_vertices; k++)
             if (mask & (1 << k)) count++;
@@ -139,43 +159,55 @@ void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
         
         int i;
         for (i = 0; i < graph->num_vertices; i++)
-            //find the first vertex
+            //find the first vertex's index
             if (mask & (1 << i)) break;
 
         for (int j = i + 1; j < graph->num_vertices; j++) {
-            //find the second vertex
+            //find the second vertex's index
             if (mask & (1 << j)) {
-                int new_mask = mask ^ (1 << i) ^ (1 << j);
-                if (dp[new_mask] + m[i][j] < dp[mask]) {
-                    dp[mask] = dp[new_mask] + m[i][j];
-                    prev_choice[mask] = new_mask;
-                    pair[mask][0] = i;
-                    pair[mask][1] = j;
+                int old_mask = mask ^ (1 << i) ^ (1 << j);  // old_mask = the current mask - two new vertices (example 0b110000 = 0b110011 xor 0b0000001 xor 0b000010)
+                if (dp[old_mask] + m[i][j] < dp[mask]) {    // if total weight of edges of vertices i and j + the current matching we have is smaller than the best matching we have.
+                    dp[mask] = dp[old_mask] + m[i][j];      // -> update the best matching we have.
+                    prev_choice[mask] = old_mask;           // Store the value of previous matching.
+                    pair[mask][0] = i;                      // Store the vertex index i of previous matching.
+                    pair[mask][1] = j;                      // Store the vertex index j of previous matching.
                 }
             }
         }
     }
-
+    //Trace back the process of matching to find which edges have been selected in best mask.
     int mask = (1 << graph->num_vertices) - 1;
     while (mask) {
-        int i = pair[mask][0];
+        // Get the vertex index i,j from array
+        int i = pair[mask][0]; 
         int j = pair[mask][1];
-
+        // Mapping the index i,j to required list to get vertices.
         i = required[i];
         j = required[j];
 
         for(int k = 0; k < graph->num_edges; k++) {
+            // Find the exact edges that is connected by two found vertices
             if ((graph->connection[k].point1 == i && graph->connection[k].point2 == j) || (graph->connection[k].point1 == j && graph->connection[k].point2 == i)) {
+                //Add the edges to MST.
                 tree->connection = realloc(tree->connection,((tree->size +1) * sizeof(connection)));
                 tree->connection[tree->size] = graph->connection[k];
                 tree->size++;
             }
         }
-        mask = prev_choice[mask]; // move to the previous mask
+        mask = prev_choice[mask]; // move to the previous mask.
     }
     return;
 }
 
+
+
+/*
+*   Input: Vertex and weight of edges connected by given Vertex and next Vertex.
+* 
+*   Output: Pointer to a Node of "linked_list" structure
+*
+*   Description: Make a node of "linked_list" structure
+*/
 anode make_node(int vertex, int weight) {
     anode p = (anode)malloc(sizeof(struct node));
     p->vertex = vertex;
@@ -184,6 +216,15 @@ anode make_node(int vertex, int weight) {
     return p;
 }
 
+
+
+/*
+*   Input: Pointer of head of a linked_list, Vertex and weight of edges connected by given Vertex and next Vertex.
+* 
+*   Output: Pointer to "linked_list" structure
+*
+*   Description: Add a node at the start of the linked list
+*/
 linked_list insert_first(linked_list l, int vertex, int weight) {
     anode p = make_node(vertex, weight);
     p -> next = l;
@@ -191,8 +232,17 @@ linked_list insert_first(linked_list l, int vertex, int weight) {
     return l;
 }
 
+
+
+/*
+*   Input: Pointer to a linked_list, Vertex and weight of edges connected by given Vertex and next Vertex.
+* 
+*   Output: Pointer to "linked_list" structure
+*
+*   Description: Add a node at the end of the linked list
+*/
 linked_list insert_last(linked_list l, int vertex, int weight) {
-    anode p = make_node(vertex, weight); // create new node
+    anode p = make_node(vertex, weight);
     if (l == NULL) {
         return p;
     }
@@ -205,6 +255,15 @@ linked_list insert_last(linked_list l, int vertex, int weight) {
     return l;
 }
 
+
+
+/*
+*   Input: Pointer to a linked_list,
+* 
+*   Output: None
+*
+*   Description: Print out every value of each nodes of a linked_list.
+*/
 void print_ll(linked_list l) {
     anode p = l;
     if(p == NULL) {
@@ -216,6 +275,15 @@ void print_ll(linked_list l) {
     }
 }
 
+
+
+/*
+*   Input: Pointer of a node in linked_list
+* 
+*   Output: None
+*
+*   Description: Delete given node.
+*/
 void delete(anode p) {
     if(p->next == NULL) {
         free(p);
@@ -230,6 +298,15 @@ void delete(anode p) {
     }
 }
 
+
+
+/*
+*   Input: Pointer of a linked_list
+* 
+*   Output: None
+*
+*   Description: Delete given linked_list
+*/
 void free_ll(linked_list ll) {
     linked_list current_ll = ll;
     while (ll != NULL) {
@@ -239,6 +316,17 @@ void free_ll(linked_list ll) {
     }
 }
 
+
+
+/*
+*   Input: A pointer to a "mst" structure, A pointer to a array containing whether an edge has been visited (0 = haven't been visited, 1 = have been visited)
+*          A starting vertex, an linked_list to store transversed path. 
+*
+*   Output: None
+*
+*   Description: This recursive function works by checking whether an edge is visited and next point that starting_vertex connected to
+*                Then calls itself with the starting_vertex is the newly found vertex.
+*/
 void visit_edge(mst_ptr tree, int *transversal, int starting_vertex, linked_list* ll) {
     int i;
     for(i = 0; i < tree->size; i++) {
@@ -259,6 +347,14 @@ void visit_edge(mst_ptr tree, int *transversal, int starting_vertex, linked_list
     }
 }
 
+
+/*
+*   Input: A pointer to "mst" structure, a array of must visit points.
+* 
+*   Output: A pointer to "linked_list" structure that contains transversal path.
+*
+*   Description: 
+*/
 linked_list eulerian_tour(mst_ptr tree, int require[]) {
     int transversal[tree->size];
     for (int i = 0; i < tree->size; i++) {
@@ -270,11 +366,19 @@ linked_list eulerian_tour(mst_ptr tree, int require[]) {
 
     visit_edge(tree, transversal, starting_vertex, &ll);
 
-    ll = insert_last(ll, starting_vertex, 0);
+    ll = insert_last(ll, starting_vertex, 0); //Manually add the starting vertex at the end, because in eulerian tour, starting point matches ending point
 
     return ll;
 }
 
+
+/*
+*   Input: Pointer of a "perf_graph" structure, pointer to a "linked_list" structure
+* 
+*   Output: None
+*
+*   Description: This function will transverse the entire "linked_list" structure, delete any point that has existed previously and change the weight accourdingly 
+*/
 void tsp_tour(perf_graph_ptr graph, linked_list ll) {
     linked_list current_ll = ll;
     while (current_ll->next != NULL) {
@@ -307,7 +411,7 @@ void tsp_tour(perf_graph_ptr graph, linked_list ll) {
 }
 
 /*
-*   Input: Pointer of a "tree" structure, an array contains must travel to points.
+*   Input: Pointer to a "perf_graph" structure, Pointer of a "mst" structure, a array contains all must visit points and its length.
 * 
 *   Output: an optimised "mst" structure 
 *
@@ -319,9 +423,22 @@ void tsp_tour(perf_graph_ptr graph, linked_list ll) {
 *   5/ Generate Eulerian Tour of G (execute via Hierholzer algorithm)
 *   6/ Generate TSP Tour from Eulerian Tour
 */
+linked_list christofides(perf_graph_ptr graph, mst_ptr tree, int require[], int num) {
+    //Step 2: Isolate Set of Odd-Degree Vertices S
+    perf_graph_ptr odd_vertices = isolation(graph,tree,require,13);
 
+    //Step 3 and 4: Find Minimum Weight Perfect Matching M of S (execute via Subset DP)
+    minimum_matching(odd_vertices, tree);
 
+    //Step 5: Generate Eulerian Tour of G (execute via Hierholzer algorithm)
+    linked_list ll = eulerian_tour(tree, require);
 
-void christofides() {
+    //Step 6: Generate TSP Tour from Eulerian Tour
+    tsp_tour(graph, ll);
 
+    //Free memory
+    free_mst(tree);
+    free_graph(graph);
+    free_graph(odd_vertices);
+    return ll;
 }

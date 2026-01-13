@@ -30,4 +30,6 @@ linked_list eulerian_tour(mst_ptr tree, int require[]);
 
 void tsp_tour(perf_graph_ptr graph, linked_list ll);
 
+linked_list christofides(perf_graph_ptr graph, mst_ptr tree, int require[], int num);
+
 #endif
