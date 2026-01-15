@@ -73,6 +73,14 @@ perf_graph_ptr isolation (perf_graph_ptr graph ,mst_ptr tree, int required[], in
 */
 
 void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
+    printf("DEBUG: graph->num_vertices = %d\n", graph->num_vertices);
+    printf("DEBUG: graph->num_edges = %d\n", graph->num_edges);
+    
+    // Kiểm tra nếu quá nhiều vertices
+    if (graph->num_vertices > 20) {
+        printf("ERROR: Too many odd vertices (%d). Cannot handle.\n", graph->num_vertices);
+        return;
+    }
     //An array contains all unique vertices from a graph.
     int required[graph->num_vertices];
 
@@ -118,7 +126,7 @@ void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
         }
     }
     //Fill the matrix with edge's weight, the two indices are two vertices of said edge.
-    for (int i = 0; i < graph->num_vertices;i++) {
+    for (int i = 0; i < graph->num_edges;i++) {
         int u = graph->connection[i].point1;
         int v = graph->connection[i].point2;
 
@@ -198,9 +206,6 @@ void minimum_matching(perf_graph_ptr graph, mst_ptr tree) {
     }
     return;
 }
-
-
-
 /*
 *   Input: Vertex and weight of edges connected by given Vertex and next Vertex.
 * 
